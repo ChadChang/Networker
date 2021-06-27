@@ -49,6 +49,7 @@ protocol Request {
 }
 
 extension Request where Output: Decodable {
+  // 預設 decode， Article & Image Request 沒用到
   func decode(_ data: Data) throws -> Output {
     let decoder = JSONDecoder()
     return try decoder.decode(Output.self, from: data)

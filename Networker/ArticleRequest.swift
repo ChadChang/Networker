@@ -40,7 +40,7 @@ struct ArticleRequest: Request {
   }
   var method: HTTPMethod { .get }
 
-  // Article 不用 Request 中預設的，使用自己的，因為 api 格式可能跟 model 一樣
+  // Article 不用 Request 中預設的，使用自己的，因為 api 格式可能跟 model 不一樣
   func decode(_ data: Data) throws -> [Article] {
     let decoder = JSONDecoder()
     let articlesCollection = try decoder.decode(Articles.self,
