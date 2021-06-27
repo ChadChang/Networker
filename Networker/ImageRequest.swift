@@ -31,8 +31,20 @@
 /// THE SOFTWARE.
 
 import Foundation
+import UIKit
 
 struct ImageRequest: Request {
   let url: URL
   var method: HTTPMethod { .get }
+
+  enum Error: Swift.Error {
+    case invalidData
+  }
+
+  func decode(_ data: Data) throws -> UIImage {
+    guard let image = UIImage(data: data) else {
+      throw Error.invalidData
+    }
+    return image
+  }
 }

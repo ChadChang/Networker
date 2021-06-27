@@ -46,12 +46,14 @@ class ArticlesViewModel: ObservableObject {
 
     let request = ImageRequest(url: article.image)
     networker.fetch(request)
-      .map(UIImage.init)
-      .replaceError(with: nil)
-//      .receive(on: DispatchQueue.main) // ArticlesViewModel 實作了 transformPublisher always 放到 mainqueue
-      .sink { [weak self] image in
+      .sink(receiveCompletion: { completion in
+        switch completion {
+        case .failure(let error): print(error)
+        default: break
+        }
+      }, receiveValue: { [weak self] image in
         self?.articles[articleIndex].downloadedImage = image
-      }
+      })
       .store(in: &cancellables)
   }
 }
