@@ -33,10 +33,18 @@
 import Foundation
 
 struct ArticleRequest: Request {
-    var url: URL {
-        let baseURL = "https://api.raywenderlich.com/api"
-        let path = "/contents?filter[content_types][]=article"
-        return URL(string: baseURL + path)!
-    }
-    var method: HTTPMethod { .get }
+  var url: URL {
+    let baseURL = "https://api.raywenderlich.com/api"
+    let path = "/contents?filter[content_types][]=article"
+    return URL(string: baseURL + path)!
+  }
+  var method: HTTPMethod { .get }
+
+  // Article 不用 Request 中預設的，使用自己的，因為 api 格式可能跟 model 一樣
+  func decode(_ data: Data) throws -> [Article] {
+    let decoder = JSONDecoder()
+    let articlesCollection = try decoder.decode(Articles.self,
+                                                from: data)
+    return articlesCollection.data.map { $0.article }
+  }
 }
