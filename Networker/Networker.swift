@@ -32,11 +32,14 @@
 
 import Combine
 import Foundation
+import UIKit
 
 protocol Networking {
   var delegate: NetworkingDelegate? { get set }
   func fetch<R: Request>(_ request: R) -> AnyPublisher<R.Output, Error>
   func fetch<T: Decodable>(url: URL) -> AnyPublisher<T, Error>
+  func fetchWithCache<R: Request>(_ request: R)
+  -> AnyPublisher<R.Output, Error> where R.Output == UIImage
 }
 
 protocol NetworkingDelegate: AnyObject {
@@ -57,6 +60,7 @@ extension NetworkingDelegate {
 
 class Networker: Networking {
   weak var delegate: NetworkingDelegate?
+  private let imageCache = RequestCache<UIImage>()
 
   func fetch<R: Request>(_ request: R) -> AnyPublisher<R.Output, Error> {
     var urlRequest = URLRequest(url: request.url)
@@ -79,6 +83,21 @@ class Networker: Networking {
     URLSession.shared.dataTaskPublisher(for: url)
       .map { $0.data }
       .decode(type: T.self, decoder: JSONDecoder())
+      .eraseToAnyPublisher()
+  }
+
+  func fetchWithCache<R: Request>(_ request: R) -> AnyPublisher<R.Output, Error> where R.Output == UIImage {
+    if let response = imageCache.response(for: request) {
+      return Just<R.Output>(response)
+        .setFailureType(to: Error.self)
+        .eraseToAnyPublisher()
+    }
+
+    // swiftlint:disable:next trailing_closure
+    return fetch(request)
+      .handleEvents(receiveOutput: {
+        self.imageCache.saveResponse($0, for: request)
+      })
       .eraseToAnyPublisher()
   }
 }
