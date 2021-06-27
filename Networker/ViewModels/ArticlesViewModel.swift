@@ -43,16 +43,12 @@ class ArticlesViewModel: ObservableObject {
           let articleIndex = articles.firstIndex(where: { $0.id == article.id }) else {
       return
     }
-
     let request = ImageRequest(url: article.image)
-    networker.fetch(request)
-      .sink(receiveCompletion: { completion in
-        switch completion {
-        case .failure(let error): print(error)
-        default: break
-        }
-      }, receiveValue: { [weak self] image in
-        self?.articles[articleIndex].downloadedImage = image
+    networker.fetchWithCache(request)
+      .sink(receiveCompletion: { error in
+        print(error)
+      }, receiveValue: { image in
+        self.articles[articleIndex].downloadedImage = image
       })
       .store(in: &cancellables)
   }

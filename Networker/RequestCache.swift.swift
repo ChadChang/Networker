@@ -32,31 +32,20 @@
 
 import Foundation
 
-enum HTTPMethod: String {
-  case get = "GET"
-  case post = "POST"
-  case put = "PUT"
-  case patch = "PATCH"
-  case delete = "DELETE"
-}
+class RequestCache<Value> {
+  private var store: [AnyRequest: Value] = [:]
 
-protocol Request {
-  var url: URL { get }
-  var method: HTTPMethod { get }
-
-  associatedtype Output
-  func decode(_ data: Data) throws -> Output
-}
-
-extension Request where Output: Decodable {
-  // 預設 decode， Article & Image Request 沒用到
-  func decode(_ data: Data) throws -> Output {
-    let decoder = JSONDecoder()
-    return try decoder.decode(Output.self, from: data)
+  func response<R: Request>(for request: R) -> Value?
+  where R.Output == Value {
+    let erasedRequest = AnyRequest(url: request.url, method:
+                                    request.method)
+    return store[erasedRequest]
   }
-}
 
-struct AnyRequest: Hashable {
-  let url: URL
-  let method: HTTPMethod
+  func saveResponse<R: Request>(_ response: Value, for request: R)
+  where R.Output == Value {
+    let erasedRequest = AnyRequest(url: request.url, method:
+                                    request.method)
+    store[erasedRequest] = response
+  }
 }
